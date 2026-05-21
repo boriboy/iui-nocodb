@@ -42,7 +42,28 @@ export const NC_SCREEN_BREAKPOINTS = {
   '5xl': { min: `${NC_BREAKPOINTS['5xl']}px` },
 }
 
-export const BASE_FALLBACK_URL = process.env.NODE_ENV === 'production' ? '/' : 'http://localhost:8080'
+const envBackendUrl =
+  process.env.NUXT_PUBLIC_NC_BACKEND_URL || process.env.NC_PUBLIC_URL || ''
+
+const envBackendPort = (() => {
+  if (envBackendUrl) {
+    try {
+      const backendUrl = new URL(envBackendUrl)
+      return backendUrl.port || (backendUrl.protocol === 'https:' ? '443' : '80')
+    } catch {
+      // Ignore invalid env value and fall through to a safe default.
+    }
+  }
+
+  return process.env.NUXT_PUBLIC_NC_BACKEND_PORT || process.env.NC_PORT || '8080'
+})()
+
+const browserOriginFallback =
+  typeof window !== 'undefined' && window.location
+    ? `${window.location.protocol}//${window.location.hostname}${envBackendPort ? `:${envBackendPort}` : ''}`
+    : envBackendUrl || `http://localhost:${envBackendPort}`
+
+export const BASE_FALLBACK_URL = process.env.NODE_ENV === 'production' ? '/' : browserOriginFallback
 
 export const GROUP_BY_VARS = {
   NULL: '__nc_null__',
