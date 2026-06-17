@@ -21,6 +21,9 @@
   "web-types": "web-types.json",
   "scripts": {
     "dev": "nuxt dev",
+    "build": "nuxt build",
+    "preview": "nuxt preview",
+    "start:prod": "pnpm run build && pnpm run preview",
     "lint": "eslint --ext \".js,.jsx,.ts,.tsx,.vue\" --fix --ignore-path .gitignore .",
     "preinstall": "npx only-allow pnpm",
     "postinstall": "nuxt prepare"
