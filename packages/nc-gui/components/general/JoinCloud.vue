@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+// Promotional content hidden for client customization
 import type { CloudFeaturesType } from '~/lib/types'
 
 const { $api } = useNuxtApp()
