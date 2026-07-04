@@ -22,8 +22,6 @@ const { clearWorkspaces } = useWorkspace()
 
 const formValidator = ref()
 
-const subscribe = ref(false)
-
 const form = reactive({
   email: '',
   password: '',
@@ -68,7 +66,7 @@ async function signUp() {
     token: route.params.token,
   }
 
-  data.ignore_subscribe = !subscribe.value
+  data.ignore_subscribe = true
 
   api.auth.signup(data).then(async (user) => {
     signIn(user.token!)
@@ -233,15 +231,6 @@ onMounted(async () => {
                 </a>
               </div>
 
-              <div v-if="!appInfo.disableEmailAuth" class="flex items-center gap-2">
-                <a-switch
-                  v-model:checked="subscribe"
-                  size="small"
-                  class="my-1 hover:(ring ring-accent ring-opacity-100) focus:(!ring !ring-accent ring-opacity-100)"
-                />
-                <div class="prose-xs text-nc-content-gray-muted">{{ $t('msg.subscribeToOurWeeklyNewsletter') }}</div>
-              </div>
-
               <div class="text-end prose-sm">
                 {{ $t('msg.info.signUp.alreadyHaveAccount') }}
 
@@ -251,17 +240,6 @@ onMounted(async () => {
           </a-form>
         </div>
 
-        <div class="prose-sm mt-4 text-nc-content-gray-muted">
-          {{ $t('msg.bySigningUp') }}
-          <a
-            class="prose-sm !text-nc-content-gray-muted underline"
-            target="_blank"
-            href="https://nocodb.com/policy-nocodb"
-            rel="noopener"
-          >
-            {{ $t('title.termsOfService') }}</a
-          >
-        </div>
       </div>
     </NuxtLayout>
   </div>
