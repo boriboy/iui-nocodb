@@ -111,16 +111,7 @@ export const useOnboardingFlow = createSharedComposable(() => {
   const { updateUserProfile } = useUsers()
 
   const isEnabledOnboardingFlow = computed(() => {
-    return (
-      !appInfo.value.disableOnboardingFlow &&
-      !ncIsPlaywright() &&
-      signedIn.value &&
-      !isSharedBase.value &&
-      !isSharedErd.value &&
-      !isSharedViewRoute(route.value) &&
-      !isSharedFormViewRoute(route.value) &&
-      !isPublicRoute(route.value)
-    )
+    return false
   })
 
   /**
