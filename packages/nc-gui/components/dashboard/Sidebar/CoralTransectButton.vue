@@ -12,7 +12,7 @@ const openCoralTransectEditor = async () => {
 </script>
 
 <template>
-  <div v-if="base?.id" class="flex flex-col gap-1">
+  <div v-if="false && base?.id" class="flex flex-col gap-1">
     <NcSidebarMenuItem
       class="group !my-0 !h-10 !gap-3 !text-sm"
       data-testid="nc-coral-transect-launcher"
