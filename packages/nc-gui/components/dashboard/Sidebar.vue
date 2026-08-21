@@ -43,6 +43,7 @@ onUnmounted(() => {
     <DashboardTreeViewProjectList>
       <template #footer>
         <div v-if="!isSharedBase" class="nc-sidebar-bottom-section">
+          <DashboardSidebarCoralQueryButton />
           <DashboardSidebarCoralTransectButton />
 
           <DashboardSidebarBeforeUserInfo />
