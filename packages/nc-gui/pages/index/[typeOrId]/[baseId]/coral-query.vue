@@ -167,7 +167,14 @@ const toggleString = (collection: string[], value: string) => {
   else collection.push(value)
 }
 
-const buildGroup = (field: string, values: string[], op: 'eq' | 'like' = 'eq') => values.map((value) => `(${field},${op},${value})`).join('~or')
+const buildGroup = (field: string, values: string[], op: 'eq' | 'like' = 'eq') => {
+  if (!values.length) return ''
+  if (op === 'eq' && values.length > 1) {
+    return `(${field},in,${values.join(',')})`
+  }
+
+  return values.map((value) => `(${field},${op},${value})`).join('~or')
+}
 
 const buildWhere = () => {
   const parts: string[] = ['(is_test,eq,0)']
@@ -599,11 +606,6 @@ const formatDisplayValue = (value: any) => (value == null || value === '' ? '—
             </button>
           </div>
 
-          <div v-if="drillTransectId" class="mt-2 bg-sky-100 border border-sky-300 rounded px-3 py-2 text-sm flex items-center gap-2">
-            <span>Showing only inside transect <b>{{ drillTransectId }}</b></span>
-            <button type="button" class="ml-auto px-2 py-0.5 bg-white border border-sky-300 rounded text-xs" @click="clearDrillDown()">Back to all transects</button>
-          </div>
-
           <div class="mt-3 bg-white rounded-lg border border-slate-200 p-3 space-y-3">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div>
@@ -700,6 +702,11 @@ const formatDisplayValue = (value: any) => (value == null || value === '' ? '—
               </div>
             </div>
             <span class="ml-auto text-sm text-slate-500">{{ totalRows }} record{{ totalRows === 1 ? '' : 's' }}</span>
+          </div>
+
+          <div v-if="drillTransectId" class="mt-3 bg-sky-100 border border-sky-300 rounded px-3 py-2 text-sm flex items-center gap-2">
+            <span>Showing only inside transect <b>{{ drillTransectId }}</b></span>
+            <button type="button" class="ml-auto px-2 py-0.5 bg-white border border-sky-300 rounded text-xs" @click="clearDrillDown()">Back to all transects</button>
           </div>
         </section>
 
