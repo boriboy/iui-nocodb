@@ -44,6 +44,7 @@ onUnmounted(() => {
       <template #footer>
         <div v-if="!isSharedBase" class="nc-sidebar-bottom-section">
           <DashboardSidebarCoralQueryButton />
+          <DashboardSidebarLagoonQueryButton />
           <DashboardSidebarCoralTransectButton />
 
           <DashboardSidebarBeforeUserInfo />
