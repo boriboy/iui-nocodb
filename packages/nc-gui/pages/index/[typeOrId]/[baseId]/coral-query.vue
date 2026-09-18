@@ -44,7 +44,7 @@ const selectedLocations = ref<string[]>([])
 const selectedDepths = ref<string[]>([])
 const selectedSizes = ref<string[]>([])
 const selectedSampler = ref('')
-const selectedStatus = ref('')
+const selectedStatus = ref('Done')
 const selectedCategory = ref('')
 const selectedGenus = ref('')
 const fromDate = ref('')
@@ -413,7 +413,7 @@ const resetFilters = async () => {
   selectedDepths.value = []
   selectedSizes.value = []
   selectedSampler.value = ''
-  selectedStatus.value = ''
+  selectedStatus.value = 'Done'
   selectedCategory.value = ''
   selectedGenus.value = ''
   fromDate.value = ''
