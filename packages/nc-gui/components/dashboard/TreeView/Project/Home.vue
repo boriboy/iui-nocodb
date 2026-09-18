@@ -9,11 +9,11 @@ const { isSharedBase } = storeToRefs(useBase())
 
 const { isMobileMode } = useGlobal()
 
+const router = useRouter()
+
 const base = inject(ProjectInj)!
 
 const baseRole = inject(ProjectRoleInj)!
-
-const { isUIAllowed } = useRoles()
 
 const { isDark } = useTheme()
 
@@ -25,11 +25,10 @@ async function addNewProjectChildEntity(showSourceSelector = true) {
   projectNodeRef.value?.addNewProjectChildEntity?.(showSourceSelector)
 }
 
-const isVisibleCreateNew = ref(false)
-
-const hasTableCreatePermission = computed(() => {
-  return isUIAllowed('tableCreate', { roles: baseRole.value, source: base.value?.sources?.[0] })
-})
+const goToCardsHome = async () => {
+  if (!base.value?.id) return
+  await router.push({ path: `/nc/${base.value.id}`, query: { page: 'home' } })
+}
 </script>
 
 <template>
@@ -58,34 +57,25 @@ const hasTableCreatePermission = computed(() => {
       </DashboardSidebarHeaderWrapper>
 
       <div
-        v-if="hasTableCreatePermission && !isSharedBase && activeSidebarTab !== 'settings'"
+        v-if="!isSharedBase && activeSidebarTab !== 'settings'"
         class="nc-project-home-section !py-0 xs:mt-1 flex items-center min-h-[var(--toolbar-height)]"
       >
         <div class="flex items-center w-full">
-          <NcDropdown v-model:visible="isVisibleCreateNew">
-            <NcButton
-              type="text"
-              size="small"
-              mobile-size="medium"
-              full-width
-              class="nc-home-create-new-btn nc-home-create-new-dropdown-btn !text-nc-content-gray-subtle !hover:(text-nc-content-gray) !xs:hidden !w-full !px-3"
-              :class="isVisibleCreateNew ? 'active' : ''"
-              data-testid="nc-home-create-new-btn"
-            >
-              <div class="flex items-center gap-2">
-                <GeneralIcon icon="ncPlusCircle" class="!text-nc-content-brand" />
+          <NcButton
+            type="text"
+            size="small"
+            mobile-size="medium"
+            full-width
+            class="nc-home-create-new-btn !text-nc-content-gray-subtle !hover:(text-nc-content-gray) !xs:hidden !w-full !px-3"
+            data-testid="nc-home-entry-btn"
+            @click="goToCardsHome"
+          >
+            <div class="flex items-center gap-2">
+              <GeneralIcon icon="home1" class="!text-nc-content-brand" />
 
-                <div>{{ $t('labels.createNew') }}</div>
-              </div>
-            </NcButton>
-
-            <template #overlay>
-              <DashboardTreeViewProjectCreateNewMenu
-                v-model:visible="isVisibleCreateNew"
-                @new-table="addNewProjectChildEntity()"
-              />
-            </template>
-          </NcDropdown>
+              <div>Home</div>
+            </div>
+          </NcButton>
         </div>
       </div>
       <div v-else class="h-1">&nbsp;</div>
@@ -165,9 +155,5 @@ const hasTableCreatePermission = computed(() => {
 
 :deep(.nc-home-create-new-btn.nc-button) {
   @apply hover:bg-nc-bg-brand !pr-1.5;
-
-  &.active {
-    @apply !bg-nc-bg-brand;
-  }
 }
 </style>

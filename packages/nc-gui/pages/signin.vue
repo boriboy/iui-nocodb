@@ -86,11 +86,11 @@ function navigateForgotPassword() {
         data-testid="nc-form-signin"
         class="md:bg-primary bg-opacity-5 signin h-full min-h-[600px] flex flex-col justify-center items-center nc-form-signin"
       >
-        <div
-          class="bg-nc-bg-default md:mt-[60px] relative flex flex-col justify-center gap-2 w-full max-w-[500px] mx-auto p-8 md:(rounded-lg border-1 border-nc-border-gray-medium shadow-xl)"
-        >
-          <GeneralNocoIcon class="color-transition hover:(ring ring-accent ring-opacity-100)" :animate="isLoading" />
+        <img src="/nmp.jpeg" alt="NMP" class="nmp-login-logo mb-5" />
 
+        <div
+          class="bg-nc-bg-default relative flex flex-col justify-center gap-2 w-full max-w-[500px] mx-auto p-8 md:(rounded-lg border-1 border-nc-border-gray-medium shadow-xl)"
+        >
           <h1 class="prose-2xl font-bold self-center my-4">{{ $t('general.signIn') }}</h1>
 
           <a-form ref="formValidator" :model="form" layout="vertical" no-style @finish="signIn">
@@ -197,6 +197,10 @@ function navigateForgotPassword() {
 
 <style lang="scss">
 .signin {
+  .nmp-login-logo {
+    @apply w-full max-w-[500px] h-auto px-4;
+  }
+
   .ant-input-affix-wrapper,
   .ant-input {
     @apply !appearance-none my-1 border-1 border-solid border-primary border-opacity-50 rounded;

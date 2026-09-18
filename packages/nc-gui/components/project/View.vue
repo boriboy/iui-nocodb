@@ -89,6 +89,13 @@ const isAuditsTabVisible = computed(
 
 const isIntegrationsTabVisible = computed(() => !isMobileMode.value && isUIAllowed('sourceCreate'))
 
+const goToHome = async () => {
+  const targetBaseId = currentBase.value?.id || base.value?.id || String(route.value.params.baseId || '')
+  if (!targetBaseId) return
+
+  await router.push({ path: `/nc/${targetBaseId}`, query: { page: 'home' } })
+}
+
 const isWorkflowsTabVisible = computed(
   () =>
     isEeUI &&
@@ -382,7 +389,9 @@ watch(
       <div v-if="!showEmptySkeleton && !isMobileMode" class="flex items-center gap-2">
         <SmartsheetTopbarManagedAppStatus />
         <SmartsheetTopbarSandboxStatus />
-        <LazyGeneralShareProject v-if="!props.tab" />
+        <button v-if="!props.tab" type="button" class="iui-topbar-logo-btn" @click="goToHome">
+          <img src="/iui.jpeg" alt="IUI" class="iui-topbar-logo" />
+        </button>
       </div>
     </div>
     <div
@@ -624,5 +633,18 @@ watch(
       @apply nc-content-max-w mx-auto;
     }
   }
+}
+
+.iui-topbar-logo {
+  height: 1.75rem;
+  width: auto;
+  object-fit: contain;
+}
+
+.iui-topbar-logo-btn {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
 }
 </style>
