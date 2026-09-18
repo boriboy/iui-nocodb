@@ -192,6 +192,10 @@ const buildWhere = () => {
   if (level.value === 'transect') {
     if (selectedStatus.value) parts.push(`(Status,eq,${selectedStatus.value})`)
   } else {
+    if (level.value === 'observation') {
+      const transectStatusTitle = findColumnTitle(activeViewMeta.value, 'Transect status')
+      parts.push(`(${transectStatusTitle},eq,Done)`)
+    }
     if (selectedCategory.value) parts.push(`(Category,eq,${selectedCategory.value})`)
     if (selectedGenus.value) parts.push(`(Observation,eq,${selectedGenus.value})`)
     if (selectedSizes.value.length) parts.push(buildGroup('Size', selectedSizes.value))
@@ -719,7 +723,7 @@ const formatDisplayValue = (value: any) => (value == null || value === '' ? '—
           <div ref="topBarRef" id="top-bar" style="display:none" @mousedown="onTopBarMouseDown">
             <div ref="topThumbRef" id="top-thumb" @mousedown.stop.prevent="onTopThumbMouseDown"></div>
           </div>
-          <div ref="tableScrollRef" id="table-scroll" class="overflow-x-auto rounded-lg" @scroll="updateScrollMetrics()">
+          <div ref="tableScrollRef" id="table-scroll" class="report-scroll overflow-auto rounded-lg" @scroll="updateScrollMetrics()">
             <table id="results" class="min-w-full">
               <thead class="bg-slate-50 text-slate-600">
                 <tr id="thead-row">
@@ -781,6 +785,14 @@ const formatDisplayValue = (value: any) => (value == null || value === '' ? '—
   font-size: 0.8rem;
 }
 
+#results thead th {
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  background: #f8fafc;
+  box-shadow: inset 0 -1px 0 #e2e8f0;
+}
+
 #results td.long,
 #results th.long {
   max-width: 15rem;
@@ -821,6 +833,10 @@ const formatDisplayValue = (value: any) => (value == null || value === '' ? '—
 #table-scroll {
   scrollbar-width: thin;
   scrollbar-color: #94a3b8 #f1f5f9;
+}
+
+.report-scroll {
+  max-height: 65vh;
 }
 
 #table-wrap {
