@@ -38,7 +38,8 @@ const lastRequestId = ref(0)
 const lastAppliedQueryFingerprint = ref('')
 
 const drillSurveyDate = ref('')
-const drillQuadrat = ref<{ date: string; x: string; y: string } | null>(null)
+const drillSurveyKey = ref('')
+const drillQuadrat = ref<{ date: string; x: string; y: string; key: string } | null>(null)
 
 const selectedYears = ref<string[]>([])
 const selectedXs = ref<string[]>([])
@@ -195,16 +196,22 @@ const buildDateBound = (field: string, op: 'gte' | 'lte', value: string) => {
 const buildWhere = () => {
   const parts: string[] = ['(is_test,eq,0)']
 
-  if (drillSurveyDate.value) {
+  if (drillSurveyKey.value) {
+    parts.push(`(survey_key,eq,${drillSurveyKey.value})`)
+  } else if (drillSurveyDate.value) {
     const dateTitle = findColumnTitle(activeViewMeta.value, 'Date')
     parts.push(buildDateExact(dateTitle, drillSurveyDate.value))
   }
 
   if (drillQuadrat.value) {
-    const xTitle = findColumnTitle(activeViewMeta.value, 'X along shore (m)')
-    const yTitle = findColumnTitle(activeViewMeta.value, 'Y seaward (m)')
-    parts.push(`(${xTitle},eq,${drillQuadrat.value.x})`)
-    parts.push(`(${yTitle},eq,${drillQuadrat.value.y})`)
+    if (drillQuadrat.value.key) {
+      parts.push(`(quadrat_key,eq,${drillQuadrat.value.key})`)
+    } else {
+      const xTitle = findColumnTitle(activeViewMeta.value, 'X along shore (m)')
+      const yTitle = findColumnTitle(activeViewMeta.value, 'Y seaward (m)')
+      parts.push(`(${xTitle},eq,${drillQuadrat.value.x})`)
+      parts.push(`(${yTitle},eq,${drillQuadrat.value.y})`)
+    }
   }
 
   if (selectedYears.value.length) parts.push(buildGroup('Year', selectedYears.value))
@@ -453,6 +460,7 @@ const resetFilters = async () => {
   fromDate.value = ''
   toDate.value = ''
   drillSurveyDate.value = ''
+  drillSurveyKey.value = ''
   drillQuadrat.value = null
   level.value = 'survey'
   resetSort()
@@ -463,9 +471,11 @@ const resetFilters = async () => {
 const openDrillDown = async (row: RowRecord) => {
   if (level.value === 'survey') {
     const date = String(getRowValueByTitle(row, 'Date') ?? '').trim()
+    const surveyKey = String(getRowValueByTitle(row, 'survey_key') ?? '').trim()
     if (!date) return
 
     drillSurveyDate.value = date
+    drillSurveyKey.value = surveyKey
     drillQuadrat.value = null
     level.value = 'quadrat'
     selectedXs.value = []
@@ -483,10 +493,13 @@ const openDrillDown = async (row: RowRecord) => {
     const date = String(getRowValueByTitle(row, 'Date') ?? '').trim()
     const x = String(getRowValueByTitle(row, 'X along shore (m)') ?? '').trim()
     const y = String(getRowValueByTitle(row, 'Y seaward (m)') ?? '').trim()
+    const surveyKey = String(getRowValueByTitle(row, 'survey_key') ?? '').trim()
+    const quadratKey = String(getRowValueByTitle(row, 'quadrat_key') ?? '').trim()
     if (!date || !x || !y) return
 
     drillSurveyDate.value = date
-    drillQuadrat.value = { date, x, y }
+    drillSurveyKey.value = surveyKey
+    drillQuadrat.value = { date, x, y, key: quadratKey }
     level.value = 'observation'
     selectedCategory.value = ''
     selectedGenus.value = ''
@@ -499,6 +512,7 @@ const openDrillDown = async (row: RowRecord) => {
 
 const clearDrillDown = async () => {
   drillSurveyDate.value = ''
+  drillSurveyKey.value = ''
   drillQuadrat.value = null
   level.value = 'survey'
   page.value = 1
