@@ -235,6 +235,7 @@ export default defineNuxtConfig({
       watch: {
         usePolling: true,
       },
+      allowedHosts: ['filemaker', 'poseidon'],
     },
     resolve: {
       alias: {
