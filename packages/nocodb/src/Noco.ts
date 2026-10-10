@@ -1,3 +1,5 @@
+// Must be first: modules like extractLimitAndOffset read process.env at import time.
+import 'dotenv/config';
 import '~/instrument';
 import path from 'path';
 import { NestFactory } from '@nestjs/core';

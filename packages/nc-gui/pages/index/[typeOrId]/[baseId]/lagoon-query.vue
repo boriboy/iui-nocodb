@@ -18,6 +18,7 @@ const { getMeta } = useMetas()
 const isBusy = ref(true)
 const isLoadingRows = ref(false)
 const isExporting = ref(false)
+const exportProgress = ref(0)
 const errorMsg = ref('')
 
 const surveyMeta = ref<TableType | null>(null)
@@ -86,6 +87,11 @@ const defaultSortTitles: Record<LagoonLevel, string[]> = {
 }
 
 const visibleColumns = computed(() => levelColumns[level.value].filter((column) => !hiddenColumns[level.value].includes(column)))
+
+const toggleColumn = (column: string) => {
+  const hidden = hiddenColumns[level.value]
+  hiddenColumns[level.value] = hidden.includes(column) ? hidden.filter((c) => c !== column) : [...hidden, column]
+}
 const totalRows = computed(() => Number(pageInfo.value.totalRows ?? rows.value.length ?? 0))
 const totalPages = computed(() => Math.max(1, Math.ceil(totalRows.value / pageSize.value)))
 const activeViewMeta = computed(() => {
@@ -363,8 +369,9 @@ const formatCsvCell = (value: any) => {
 }
 
 const downloadCsv = (filename: string, columns: string[], data: RowRecord[]) => {
-  const content = [columns.join(','), ...data.map((row) => columns.map((column) => formatCsvCell(row[column])).join(','))].join('\r\n')
-  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' })
+  const parts: string[] = [`${columns.join(',')}\r\n`]
+  for (const row of data) parts.push(`${columns.map((column) => formatCsvCell(row[column])).join(',')}\r\n`)
+  const blob = new Blob(parts, { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
   const anchor = document.createElement('a')
   anchor.href = url
@@ -537,22 +544,38 @@ const exportCurrentCsv = async () => {
   isExporting.value = true
   try {
     const columns = visibleColumns.value
-    const responseRows: RowRecord[] = []
-    let offset = 0
+    const requestedPageSize = 10000 // matches NC_DB_QUERY_LIMIT_MAX; the server clamps if lower
+    const exportConcurrency = 4
+    const where = buildWhere()
+    const sortArrJson = stringifyFilterOrSortArr(buildSorts())
+    const fetchPage = async (offset: number) =>
+      (await $api.dbTableRow.list('noco', baseId, meta.id as string, { limit: requestedPageSize, offset, where, sortArrJson } as any)) as any
 
-    while (true) {
-      const response = await $api.dbTableRow.list('noco', baseId, meta.id as string, {
-        limit: 1000,
-        offset,
-        where: buildWhere(),
-        sortArrJson: stringifyFilterOrSortArr(buildSorts()),
-      } as any)
+    const first = await fetchPage(0)
+    const firstList = (first?.list ?? []) as RowRecord[]
+    const pages: RowRecord[][] = [firstList]
+    const total = Number(first?.pageInfo?.totalRows ?? 0)
+    const exportPageSize = Math.max(1, firstList.length)
+    const pageCount = Math.ceil(total / exportPageSize)
 
-      const list = (response?.list ?? []) as RowRecord[]
-      responseRows.push(...list)
-      if (list.length < 1000) break
-      offset += 1000
+    let donePages = 1
+    const updateProgress = () => {
+      exportProgress.value = pageCount > 0 ? Math.round((donePages / pageCount) * 100) : 100
     }
+    updateProgress()
+
+    let nextPageIndex = 1
+    const worker = async () => {
+      while (nextPageIndex < pageCount) {
+        const index = nextPageIndex++
+        pages[index] = ((await fetchPage(index * exportPageSize))?.list ?? []) as RowRecord[]
+        donePages++
+        updateProgress()
+      }
+    }
+    await Promise.all(Array.from({ length: Math.min(exportConcurrency, Math.max(0, pageCount - 1)) }, worker))
+
+    const responseRows = pages.flat()
 
     const fileDate = new Date().toISOString().slice(0, 10)
     downloadCsv(`nmp-lagoon-${level.value}-${fileDate}.csv`, columns, responseRows)
@@ -560,6 +583,7 @@ const exportCurrentCsv = async () => {
     message.error(await extractSdkResponseErrorMsg(error))
   } finally {
     isExporting.value = false
+    exportProgress.value = 0
   }
 }
 
@@ -648,7 +672,7 @@ const formatDisplayValue = (value: any) => (value == null || value === '' ? '—
               "
               @click="changeLevel('survey')"
             >
-              By survey
+              Surveys
             </button>
             <button
               type="button"
@@ -660,7 +684,7 @@ const formatDisplayValue = (value: any) => (value == null || value === '' ? '—
               "
               @click="changeLevel('quadrat')"
             >
-              By quadrat
+              Quadrat Composition
             </button>
             <button
               type="button"
@@ -672,7 +696,7 @@ const formatDisplayValue = (value: any) => (value == null || value === '' ? '—
               "
               @click="changeLevel('observation')"
             >
-              By observation
+              All Data
             </button>
           </div>
 
@@ -751,18 +775,21 @@ const formatDisplayValue = (value: any) => (value == null || value === '' ? '—
               <span class="mini-spinner"></span>
               Loading...
             </span>
-            <button type="button" class="px-4 py-2 bg-slate-200 rounded text-sm" :disabled="isExporting" @click="exportCurrentCsv()">{{ isExporting ? 'Exporting…' : 'Export CSV' }}</button>
+            <button type="button" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-200 rounded text-sm disabled:opacity-60 disabled:cursor-not-allowed" :disabled="isExporting" @click="exportCurrentCsv()"><span v-if="isExporting" class="mini-spinner"></span>{{ isExporting ? 'Exporting…' : 'Export CSV' }}</button>
+            <div v-if="isExporting" class="w-28 h-1.5 bg-slate-200 rounded-full overflow-hidden" role="progressbar" :aria-valuenow="exportProgress" aria-valuemin="0" aria-valuemax="100">
+              <div class="h-full bg-teal-600 transition-all duration-200" :style="{ width: `${exportProgress}%` }"></div>
+            </div>
             <button type="button" class="px-4 py-2 bg-slate-100 rounded text-sm text-slate-600" @click="resetFilters()">Reset filters</button>
             <div class="relative">
               <button type="button" class="px-4 py-2 bg-white border border-slate-300 rounded text-sm" @click="showColumnsPanel = !showColumnsPanel">Columns &#9662;</button>
               <div v-if="showColumnsPanel" class="absolute z-30 mt-1 bg-white border border-slate-300 rounded shadow-lg p-2 w-72 max-h-80 overflow-y-auto">
-                <div class="text-xs text-slate-500 mb-1">Tick what you want to see in this view</div>
+                <div class="text-xs text-slate-500 mb-1">Uncheck a column to hide it from this view</div>
                 <div class="space-y-1">
                   <label v-for="column in levelColumns[level]" :key="column" class="flex items-center gap-2 text-xs">
-                    <input v-model="hiddenColumns[level]" type="checkbox" :value="column"> {{ column }}
+                    <input type="checkbox" :checked="!hiddenColumns[level].includes(column)" @change="toggleColumn(column)"> {{ column }}
                   </label>
                 </div>
-                <button type="button" class="mt-2 text-xs text-teal-700 underline" @click="hiddenColumns[level] = []">show all</button>
+                <button type="button" class="mt-2 text-xs text-teal-700 underline" @click="hiddenColumns[level] = []">select all</button>
               </div>
             </div>
             <span class="ml-auto text-sm text-slate-500">{{ totalRows }} record{{ totalRows === 1 ? '' : 's' }}</span>
@@ -774,9 +801,13 @@ const formatDisplayValue = (value: any) => (value == null || value === '' ? '—
           </div>
         </section>
 
-        <div class="flex items-center justify-between text-xs text-slate-500 px-1">
+        <div class="flex items-center justify-between gap-3 text-xs text-slate-500 px-1">
+          <div class="flex items-center gap-2">
+            <button type="button" class="px-2 py-1 border rounded bg-white disabled:opacity-50" :disabled="page <= 1 || isLoadingRows" @click="changePage(-1)">prev</button>
+            <span class="px-3 py-1 border rounded bg-white">{{ page }} / {{ totalPages }}</span>
+            <button type="button" class="px-2 py-1 border rounded bg-white disabled:opacity-50" :disabled="page >= totalPages || isLoadingRows" @click="changePage(1)">next</button>
+          </div>
           <span>Click a column heading to sort. In survey/quadrat levels, click a row to drill deeper.</span>
-          <span>Page {{ page }} / {{ totalPages }}</span>
         </div>
 
         <section id="table-wrap" class="bg-white rounded-lg border border-slate-200">
