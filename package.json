@@ -36,7 +36,6 @@
     "start:backend": "pnpm --filter=nocodb run start",
     "start:backend:prod": "pnpm --filter=nocodb run start:prod",
     "start:prod": "pnpm --parallel --filter=nocodb --filter=nc-gui run start:prod",
-    "prepare": "husky install",
     "preinstall": "npx only-allow pnpm",
     "registerIntegrations": "pnpm --filter=nocodb run registerIntegrations",
     "install:local-sdk": "node scripts/installLocalSdk.js"
