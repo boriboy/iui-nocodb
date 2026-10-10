@@ -89,13 +89,6 @@ const isAuditsTabVisible = computed(
 
 const isIntegrationsTabVisible = computed(() => !isMobileMode.value && isUIAllowed('sourceCreate'))
 
-const goToHome = async () => {
-  const targetBaseId = currentBase.value?.id || base.value?.id || String(route.value.params.baseId || '')
-  if (!targetBaseId) return
-
-  await router.push({ path: `/nc/${targetBaseId}`, query: { page: 'home' } })
-}
-
 const isWorkflowsTabVisible = computed(
   () =>
     isEeUI &&
@@ -344,7 +337,7 @@ watch(
     <div
       v-else-if="!isAdminPanel"
       class="flex flex-row px-2 py-2 gap-3 justify-between w-full border-b-1 border-nc-border-gray-medium"
-      :class="{ 'nc-table-toolbar-mobile': isMobileMode, 'h-[var(--topbar-height)]': !isMobileMode }"
+      :class="{ 'nc-table-toolbar-mobile': isMobileMode, 'h-[calc(var(--topbar-height)*1.5)] min-h-[calc(var(--topbar-height)*1.5)]': !isMobileMode }"
     >
       <div class="flex-1 max-w-full md:max-w-[calc(100%_-_100px)] flex flex-row items-center gap-x-3">
         <GeneralOpenLeftSidebarBtn />
@@ -389,9 +382,22 @@ watch(
       <div v-if="!showEmptySkeleton && !isMobileMode" class="flex items-center gap-2">
         <SmartsheetTopbarManagedAppStatus />
         <SmartsheetTopbarSandboxStatus />
-        <button v-if="!props.tab" type="button" class="iui-topbar-logo-btn" @click="goToHome">
-          <img src="/iui.jpeg" alt="IUI" class="iui-topbar-logo" />
-        </button>
+        <div class="iui-topbar-logos">
+          <a href="https://iui-eilat.ac.il/" target="_blank" rel="noopener noreferrer" class="iui-topbar-logo-btn">
+            <img src="/iui.jpeg" alt="IUI" class="iui-topbar-logo" />
+          </a>
+          <a
+            href="https://iui-eilat.huji.ac.il/en/about-monitoring-program"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="iui-topbar-logo-btn"
+          >
+            <img src="/nmp.jpeg" alt="NMP" class="iui-topbar-nmp-logo" />
+          </a>
+          <a href="https://new.huji.ac.il/" target="_blank" rel="noopener noreferrer" class="iui-topbar-logo-btn">
+            <img src="/HujiNew.svg" alt="HUJI" class="iui-topbar-huji-logo" />
+          </a>
+        </div>
       </div>
     </div>
     <div
@@ -635,10 +641,23 @@ watch(
   }
 }
 
-.iui-topbar-logo {
-  height: 1.75rem;
+.iui-topbar-logos {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+  /* 1.5x topbar minus py-2 padding and bottom border */
+  height: calc(var(--topbar-height) * 1.5 - 1rem - 1px);
+  flex-shrink: 0;
+}
+
+.iui-topbar-logo,
+.iui-topbar-nmp-logo,
+.iui-topbar-huji-logo {
+  height: 100%;
   width: auto;
+  max-width: none;
   object-fit: contain;
+  display: block;
 }
 
 .iui-topbar-logo-btn {
@@ -646,5 +665,7 @@ watch(
   border: 0;
   padding: 0;
   cursor: pointer;
+  display: block;
+  height: 100%;
 }
 </style>
